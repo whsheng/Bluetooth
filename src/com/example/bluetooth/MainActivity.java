@@ -1,10 +1,13 @@
 package com.example.bluetooth;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -12,7 +15,6 @@ import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -20,12 +22,14 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
 
 	private BluetoothAdapter mBluetoothAdapter = null;
+	private BluetoothSocket mBluetoothSocket = null;
 	private final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 	private final int REQUEST_ENABLE_BT = 1;
 	private HashSet<String> devices;
 	private Set<BluetoothDevice> bluetoothDevices;
 	private ListView mBluetoothList;
 
+	@SuppressLint("NewApi")
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -40,17 +44,39 @@ public class MainActivity extends Activity {
 		if (bluetoothDevices.size() > 0) {
 			// 把裝置名稱以及MAC Address印出來
 			for (BluetoothDevice device : bluetoothDevices) {
+				if (device.getName().equals("CSIE5")) {
+					try {
+						mBluetoothSocket = device.createInsecureRfcommSocketToServiceRecord(SPP_UUID);
+						Toast.makeText(this, "找到", 0).show();
+
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
 				devices.add("[已配對]" + "\n" + device.getName() + "\n" + device.getAddress());
 			}
 		}
 
 		mBluetoothList.setAdapter(new BtAdapter(this, devices));
 
-		// 註冊一個BroadcastReceiver，等等會用來接收搜尋到裝置的消息
-		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-		registerReceiver(mReceiver, filter);
-		// 開始搜尋裝置
-		mBluetoothAdapter.startDiscovery(); 
+		InputStream input;
+		try {
+			mBluetoothSocket.connect();
+			input = mBluetoothSocket.getInputStream();
+			byte[] b = new byte[1024];
+			int tmp = input.read(b);
+			Toast.makeText(this, new String(b, 0, tmp - 1), 0).show();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// // 註冊一個BroadcastReceiver，等等會用來接收搜尋到裝置的消息
+		// IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+		// registerReceiver(mReceiver, filter);
+		// // 開始搜尋裝置
+		// mBluetoothAdapter.startDiscovery();
 
 	}
 
@@ -61,13 +87,6 @@ public class MainActivity extends Activity {
 				// 取得藍芽裝置這個物件
 				BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 				devices.add("[搜尋到]" + device.getName() + "\n" + device.getAddress());
-				BluetoothSocket clienSocket;
-				try {
-					clienSocket = device.createRfcommSocketToServiceRecord(SPP_UUID);
-					clienSocket.connect();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
 			mBluetoothList.setAdapter(new BtAdapter(MainActivity.this, devices));
 		}
