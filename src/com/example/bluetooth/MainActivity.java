@@ -14,6 +14,7 @@ import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
@@ -49,6 +50,11 @@ public class MainActivity extends Activity {
 				bluetoothDevicesName.add("[已配對]" + "\n" + device.getName() + "\n" + device.getAddress());
 			}
 		}
+
+		// 註冊一個BroadcastReceiver，等等會用來接收搜尋到裝置的消息
+		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+		registerReceiver(mReceiver, filter);
+		mBluetoothAdapter.startDiscovery(); // 開始搜尋裝置
 
 		mBluetoothList.setAdapter(new BtAdapter(this, bluetoothDevicesName));
 		mBluetoothList.setOnItemClickListener(listListener);
@@ -87,8 +93,8 @@ public class MainActivity extends Activity {
 		super.onActivityResult(requestCode, resultCode, data);
 		if (requestCode == REQUEST_ENABLE_BT) {
 			if (!(resultCode == RESULT_OK)) {
-				finish();
 				Toast.makeText(this, "不開啟藍芽無法使用，因此關閉程式", Toast.LENGTH_LONG).show();
+				finish();
 			}
 		}
 	}
@@ -100,7 +106,8 @@ public class MainActivity extends Activity {
 	OnItemClickListener listListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-
+			// 註冊一個BroadcastReceiver，等等會用來接收搜尋到裝置的消息
+			mBluetoothAdapter.cancelDiscovery();
 			Object[] deviceses = bluetoothDevices.toArray();
 			BluetoothDevice mBluetoothDevice = (BluetoothDevice) deviceses[0];
 			Toast.makeText(MainActivity.this, mBluetoothDevice.getName(), 0).show();
