@@ -68,20 +68,31 @@ public class MainActivity extends Activity {
 		}
 	};
 
+
+
+
 	private void checkBluetooth() {
+
+	/**
+	 * 判斷藍芽裝置是否正常及開啟
+	 * @return 藍芽裝置是否正常及開啟 (true = 沒問題)
+	 */
+	private boolean checkBluetooth() {
 		mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 		// 裝置不支援藍芽
-		if (mBluetoothAdapter == null) {
+		if (mBluetoothAdapter != null) {
 			Toast.makeText(this, "本裝置不支援藍芽", Toast.LENGTH_SHORT).show();
-			return;
+			return false;
 		}
 
 		// 藍芽沒有開啟
 		if (!mBluetoothAdapter.isEnabled()) {
 			Intent mIntentOpenBT = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
 			startActivityForResult(mIntentOpenBT, REQUEST_ENABLE_BT);
-			return;
+			return false;
 		}
+
+		return true;
 	}
 
 	@Override
