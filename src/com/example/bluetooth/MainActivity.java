@@ -51,15 +51,11 @@ public class MainActivity extends Activity {
 			}
 		}
 
-		// 註冊一個BroadcastReceiver，等等會用來接收搜尋到裝置的消息
-		IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-		registerReceiver(mReceiver, filter);
-		mBluetoothAdapter.startDiscovery(); // 開始搜尋裝置
-
 		mBluetoothList.setAdapter(new BtAdapter(this, bluetoothDevicesName));
 		mBluetoothList.setOnItemClickListener(listListener);
 	}
 
+	// 偵測藍芽廣播
 	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
 		public void onReceive(Context context, Intent intent) {
 			// 當收尋到裝置時
